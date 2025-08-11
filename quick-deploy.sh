@@ -94,7 +94,8 @@ SSH_KEY_NAME="github-runner-key"
 if ! doctl compute ssh-key list --format Name --no-header | grep -q "$SSH_KEY_NAME"; then
     echo -e "${YELLOW}Creating SSH key...${NC}"
     ssh-keygen -t ed25519 -f /tmp/runner-key -N "" -q
-    SSH_KEY_ID=$(doctl compute ssh-key create "$SSH_KEY_NAME" --public-key-file /tmp/runner-key.pub --format ID --no-header)
+    PUB_KEY=$(cat /tmp/runner-key.pub)
+    SSH_KEY_ID=$(doctl compute ssh-key create "$SSH_KEY_NAME" --public-key "$PUB_KEY" --format ID --no-header)
     rm -f /tmp/runner-key /tmp/runner-key.pub
 else
     SSH_KEY_ID=$(doctl compute ssh-key list --format ID,Name --no-header | grep "$SSH_KEY_NAME" | awk '{print $1}')
