@@ -62,7 +62,8 @@ ORG_NAME=${ORG_NAME:-Bytelope}
 
 # Create cloud-init
 echo -e "${YELLOW}Creating configuration...${NC}"
-cat > /tmp/runner-cloud-init.yaml << EOF
+TEMP_FILE=$(mktemp)
+cat > "$TEMP_FILE" << EOF
 #cloud-config
 runcmd:
   - curl -fsSL https://get.docker.com | sh
@@ -88,7 +89,7 @@ DROPLET_ID=$(doctl compute droplet create github-runner-$(date +%s) \
     --region ams3 \
     --size "$SIZE" \
     --image ubuntu-24-04-x64 \
-    --user-data-file /tmp/runner-cloud-init.yaml \
+    --user-data-file "$TEMP_FILE" \
     --wait \
     --format ID \
     --no-header)
@@ -97,7 +98,7 @@ DROPLET_IP=$(doctl compute droplet get "$DROPLET_ID" --format PublicIPv4 --no-he
 DROPLET_NAME=$(doctl compute droplet get "$DROPLET_ID" --format Name --no-header)
 
 # Cleanup
-rm -f /tmp/runner-cloud-init.yaml
+rm -f "$TEMP_FILE"
 
 # Done!
 echo ""
