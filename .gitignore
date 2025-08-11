@@ -3,3 +3,5 @@
 .DS_Store
 cloud-init.yaml
 user-data.sh
+*.iml
+.idea/
