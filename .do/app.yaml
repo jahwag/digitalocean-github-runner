@@ -1,0 +1,21 @@
+spec:
+  name: github-actions-runner
+  region: ams
+  workers:
+    - name: runner
+      git:
+        branch: main
+        repo_clone_url: https://github.com/jahwag/digitalocean-github-runner.git
+      dockerfile_path: Dockerfile
+      instance_count: 1
+      instance_size_slug: basic-xxs
+      envs:
+        - key: GITHUB_TOKEN
+          scope: RUN_TIME
+          type: SECRET
+        - key: GITHUB_ORG
+          scope: RUN_TIME
+          value: Bytelope
+        - key: RUNNER_NAME
+          scope: RUN_TIME
+          value: do-app-runner
