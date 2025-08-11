@@ -1,12 +1,16 @@
 FROM ubuntu:24.04
 
+# Set non-interactive to avoid prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Install dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     sudo \
     git \
     jq \
     libicu-dev \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Create runner user
