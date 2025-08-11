@@ -89,10 +89,22 @@ echo "• Region: Amsterdam"
 echo "• Organization: $ORG_NAME"
 echo ""
 
+# Create SSH key if needed
+SSH_KEY_NAME="github-runner-key"
+if ! doctl compute ssh-key list --format Name --no-header | grep -q "$SSH_KEY_NAME"; then
+    echo -e "${YELLOW}Creating SSH key...${NC}"
+    ssh-keygen -t ed25519 -f /tmp/runner-key -N "" -q
+    SSH_KEY_ID=$(doctl compute ssh-key create "$SSH_KEY_NAME" --public-key-file /tmp/runner-key.pub --format ID --no-header)
+    rm -f /tmp/runner-key /tmp/runner-key.pub
+else
+    SSH_KEY_ID=$(doctl compute ssh-key list --format ID,Name --no-header | grep "$SSH_KEY_NAME" | awk '{print $1}')
+fi
+
 DROPLET_ID=$(doctl compute droplet create github-runner-$(date +%s) \
     --region ams3 \
     --size "$SIZE" \
-    --image ubuntu-22-04-x64 \
+    --image ubuntu-24-04-x64 \
+    --ssh-keys "$SSH_KEY_ID" \
     --user-data-file "$TEMP_FILE" \
     --wait \
     --format ID \
