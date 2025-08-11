@@ -62,7 +62,7 @@ ORG_NAME=${ORG_NAME:-Bytelope}
 
 # Create cloud-init
 echo -e "${YELLOW}Creating configuration...${NC}"
-TEMP_FILE=$(mktemp)
+TEMP_FILE="cloud-init-$$.yaml"
 cat > "$TEMP_FILE" << EOF
 #cloud-config
 runcmd:
