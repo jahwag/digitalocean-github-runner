@@ -67,6 +67,16 @@ echo -e "${YELLOW}Creating configuration...${NC}"
 TEMP_FILE="cloud-init-$$.yaml"
 cat > "$TEMP_FILE" << EOF
 #cloud-config
+users:
+  - default
+  - name: runner
+    groups: sudo, docker
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+
+chpasswd:
+  expire: false
+
 runcmd:
   - curl -fsSL https://get.docker.com | sh
   - git clone https://github.com/jahwag/digitalocean-github-runner /opt/runner
