@@ -100,7 +100,7 @@ echo ""
 DROPLET_ID=$(doctl compute droplet create github-runner-$(date +%s) \
     --region ams3 \
     --size "$SIZE" \
-    --image ubuntu-24-04-x64 \
+    --image ubuntu-22-04-x64 \
     --user-data-file "$TEMP_FILE" \
     --wait \
     --format ID \
