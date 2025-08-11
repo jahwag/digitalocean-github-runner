@@ -65,54 +65,21 @@ ORG_NAME=${ORG_NAME:-Bytelope}
 # Create cloud-init  
 echo -e "${YELLOW}Creating configuration...${NC}"
 TEMP_FILE="cloud-init-$$.yaml"
-cat > "$TEMP_FILE" << 'EOF'
+cat > "$TEMP_FILE" << EOF
 #cloud-config
-users:
-  - name: root
-    lock_passwd: false
-
-ssh_pwauth: false
-
-write_files:
-  - path: /root/setup-runner.sh
-    permissions: '0755'
-    content: |
-      #!/bin/bash
-      set -e
-      
-      # Wait for apt to be ready
-      while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do
-        sleep 1
-      done
-      
-      # Install Docker
-      curl -fsSL https://get.docker.com | sh
-      systemctl enable docker
-      systemctl start docker
-      
-      # Clone and build runner
-      git clone https://github.com/jahwag/digitalocean-github-runner /opt/runner
-      cd /opt/runner  
-      docker build -t runner .
-      
-      # Start runner with token
-      docker run -d --name runner --restart always \
-        -e GITHUB_TOKEN=GITHUB_TOKEN_PLACEHOLDER \
-        -e GITHUB_ORG=ORG_NAME_PLACEHOLDER \
-        runner
+package_update: true
 
 runcmd:
-  - sed -i "s/^root:[^:]*:/root::/" /etc/shadow
-  - chage -d 0 root
-  - passwd -d root
-  - sed -i "s/GITHUB_TOKEN_PLACEHOLDER/${GITHUB_TOKEN}/" /root/setup-runner.sh
-  - sed -i "s/ORG_NAME_PLACEHOLDER/${ORG_NAME}/" /root/setup-runner.sh
-  - nohup /root/setup-runner.sh > /root/setup.log 2>&1 &
+  - curl -fsSL https://get.docker.com | sh
+  - git clone https://github.com/jahwag/digitalocean-github-runner /opt/runner
+  - cd /opt/runner
+  - docker build -t runner .
+  - |
+    docker run -d --name runner --restart always \
+      -e GITHUB_TOKEN=${GITHUB_TOKEN} \
+      -e GITHUB_ORG=${ORG_NAME} \
+      runner
 EOF
-
-# Replace placeholders
-sed -i "s/GITHUB_TOKEN_PLACEHOLDER/${GITHUB_TOKEN}/" "$TEMP_FILE"
-sed -i "s/ORG_NAME_PLACEHOLDER/${ORG_NAME}/" "$TEMP_FILE"
 
 # Deploy
 echo ""
@@ -125,7 +92,7 @@ echo ""
 DROPLET_ID=$(doctl compute droplet create github-runner-$(date +%s) \
     --region ams3 \
     --size "$SIZE" \
-    --image ubuntu-24-04-x64 \
+    --image ubuntu-22-04-x64 \
     --user-data-file "$TEMP_FILE" \
     --wait \
     --format ID \
