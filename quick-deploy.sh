@@ -44,16 +44,18 @@ read -p "Paste your GitHub Personal Access Token: " GITHUB_TOKEN
 # Choose size
 echo ""
 echo -e "${YELLOW}Choose your droplet size:${NC}"
-echo "1) Small - 2GB RAM, 1 CPU ($12/month) - Basic builds"
-echo "2) Medium - 4GB RAM, 2 CPU ($24/month) - Java/Docker builds"
-echo "3) Large - 8GB RAM, 4 CPU ($48/month) - Heavy workloads"
-read -p "Enter choice [1-3]: " size_choice
+echo "1) Basic - 2GB RAM, 1 CPU ($12/month) - Light builds"
+echo "2) Standard - 2GB RAM, 2 CPU ($18/month) - Most builds"  
+echo "3) Performance - 4GB RAM, 2 CPU ($24/month) - Java/Docker"
+echo "4) Heavy - 8GB RAM, 4 CPU ($48/month) - Large projects"
+read -p "Enter choice [1-4]: " size_choice
 
 case $size_choice in
-    1) SIZE="s-2vcpu-2gb"; DESC="2GB RAM" ;;
-    2) SIZE="s-2vcpu-4gb"; DESC="4GB RAM" ;;
-    3) SIZE="s-4vcpu-8gb"; DESC="8GB RAM" ;;
-    *) SIZE="s-2vcpu-2gb"; DESC="2GB RAM" ;;
+    1) SIZE="s-1vcpu-2gb"; DESC="2GB RAM, 1 CPU" ;;
+    2) SIZE="s-2vcpu-2gb"; DESC="2GB RAM, 2 CPU" ;;
+    3) SIZE="s-2vcpu-4gb"; DESC="4GB RAM, 2 CPU" ;;
+    4) SIZE="s-4vcpu-8gb"; DESC="8GB RAM, 4 CPU" ;;
+    *) SIZE="s-1vcpu-2gb"; DESC="2GB RAM, 1 CPU" ;;
 esac
 
 # Get organization name

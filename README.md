@@ -18,9 +18,10 @@ The script will:
 
 ## Costs
 
-- **Small**: 2GB RAM, 1 CPU - $12/month
-- **Medium**: 4GB RAM, 2 CPU - $24/month  
-- **Large**: 8GB RAM, 4 CPU - $48/month
+- **Basic**: 2GB RAM, 1 CPU - $12/month
+- **Standard**: 2GB RAM, 2 CPU - $18/month
+- **Performance**: 4GB RAM, 2 CPU - $24/month  
+- **Heavy**: 8GB RAM, 4 CPU - $48/month
 
 ## Requirements
 
