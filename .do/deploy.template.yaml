@@ -8,7 +8,7 @@ spec:
         repo_clone_url: https://github.com/jahwag/digitalocean-github-runner.git
       dockerfile_path: Dockerfile
       instance_count: 1
-      instance_size_slug: basic-xxs
+      instance_size_slug: basic-s
       envs:
         - key: GITHUB_TOKEN
           scope: RUN_TIME
