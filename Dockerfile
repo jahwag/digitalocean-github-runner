@@ -42,7 +42,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
     apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Playwright browser dependencies
+# Install Playwright browser dependencies  
 RUN apt-get update && apt-get install -y \
     libnss3 \
     libnspr4 \
@@ -64,11 +64,21 @@ RUN apt-get update && apt-get install -y \
     libpango-1.0-0 \
     libcairo2 \
     libasound2t64 \
+    libasound2-data \
     libgtk-3-0 \
     libgdk-pixbuf2.0-0 \
     libxshmfence1 \
     fonts-liberation \
+    libxtst6 \
+    libxss1 \
+    libexpat1 \
+    libxcursor1 \
+    libxi6 \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Playwright globally as root
+RUN npm install -g playwright@latest && \
+    npx playwright install-deps chromium
 
 # Install Java 21 LTS
 RUN apt-get update && \
@@ -126,6 +136,10 @@ RUN RUNNER_VERSION=$(curl -s https://api.github.com/repos/actions/runner/release
     tar xzf actions-runner.tar.gz && \
     rm actions-runner.tar.gz && \
     sudo ./bin/installdependencies.sh
+
+# Install Playwright browsers as runner user
+RUN npm install playwright && \
+    npx playwright install chromium
 
 # Copy and set entrypoint
 COPY --chown=runner:runner entrypoint.sh .
