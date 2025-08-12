@@ -1,7 +1,13 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 # Set non-interactive to avoid prompts
 ENV DEBIAN_FRONTEND=noninteractive
+
+# Set Java and Maven environment variables
+ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+ENV MAVEN_HOME=/opt/apache-maven-3.9.11
+ENV GRADLE_HOME=/opt/gradle-9.0.0
+ENV PATH=$JAVA_HOME/bin:$MAVEN_HOME/bin:$GRADLE_HOME/bin:$PATH
 
 # Install basic dependencies and tools
 RUN apt-get update && apt-get install -y \
@@ -57,16 +63,52 @@ RUN apt-get update && apt-get install -y \
     libxkbcommon0 \
     libpango-1.0-0 \
     libcairo2 \
-    libasound2 \
+    libasound2t64 \
     libgtk-3-0 \
     libgdk-pixbuf2.0-0 \
     libxshmfence1 \
     fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Java 21 LTS
+RUN apt-get update && \
+    apt-get install -y openjdk-21-jdk && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Maven 3.9.11 (matching GitHub runners)
+RUN wget -q https://dlcdn.apache.org/maven/maven-3/3.9.11/binaries/apache-maven-3.9.11-bin.tar.gz && \
+    tar -xzf apache-maven-3.9.11-bin.tar.gz -C /opt && \
+    rm apache-maven-3.9.11-bin.tar.gz && \
+    ln -s /opt/apache-maven-3.9.11/bin/mvn /usr/local/bin/mvn && \
+    ln -s /opt/apache-maven-3.9.11/bin/mvnDebug /usr/local/bin/mvnDebug
+
+# Install Gradle
+RUN wget -q -O gradle-9.0.0-bin.zip https://github.com/gradle/gradle-distributions/releases/download/v9.0.0/gradle-9.0.0-bin.zip && \
+    unzip -q gradle-9.0.0-bin.zip -d /opt && \
+    rm gradle-9.0.0-bin.zip && \
+    ln -s /opt/gradle-9.0.0/bin/gradle /usr/local/bin/gradle
+
+# Install .NET SDK
+RUN wget -q https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
+    dpkg -i packages-microsoft-prod.deb && \
+    rm packages-microsoft-prod.deb && \
+    apt-get update && \
+    apt-get install -y dotnet-sdk-8.0 || true && \
+    rm -rf /var/lib/apt/lists/*
+
 # Install Docker
 RUN apt-get update && apt-get install -y \
     docker.io \
+    docker-compose-v2 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install additional build tools
+RUN apt-get update && apt-get install -y \
+    ant \
+    rsync \
+    shellcheck \
+    postgresql-client \
+    mysql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Create runner user and add to docker group
