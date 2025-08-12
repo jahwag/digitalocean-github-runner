@@ -41,18 +41,11 @@ for i in $(seq 1 $TOTAL_RUNNERS); do
       - RUNNER_LABELS=self-hosted,Linux,X64,docker
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - runner${i}-work:/home/runner/_work
     restart: unless-stopped
     networks:
       - runner-network
 
 EOF
-done
-
-# Add volumes section
-echo "volumes:" >> docker-compose.override.yml
-for i in $(seq 1 $TOTAL_RUNNERS); do
-    echo "  runner${i}-work:" >> docker-compose.override.yml
 done
 
 # Add networks section

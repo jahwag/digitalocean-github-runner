@@ -1,6 +1,16 @@
 #!/bin/bash
 set -e
 
+# Ensure proper permissions for work directory
+if [ -d "/home/runner/_work" ]; then
+    sudo chown -R runner:runner /home/runner/_work
+    chmod -R 755 /home/runner/_work
+fi
+
+# Create required directories with proper permissions
+mkdir -p /home/runner/_work/_tool /home/runner/_work/_temp /home/runner/_work/_actions
+chmod -R 755 /home/runner/_work
+
 # Check required environment variables
 if [ -z "${GITHUB_TOKEN}" ]; then
     echo "Error: GITHUB_TOKEN is required"
