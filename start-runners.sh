@@ -18,17 +18,65 @@ fi
 # Load environment variables
 export $(cat .env | grep -v '^#' | xargs)
 
-# Start runners with unique names
+# Get hostname for unique naming
+HOSTNAME=$(hostname)
+
+# Create a docker-compose override file with unique runner configurations
+cat > docker-compose.override.yml << EOF
+version: '3.8'
+
+services:
+EOF
+
+# Generate service definitions for each runner
 for i in $(seq 1 $TOTAL_RUNNERS); do
-    echo "Starting runner $i of $TOTAL_RUNNERS..."
-    RUNNER_NUMBER=$i docker compose up -d --scale runner=$i
+    cat >> docker-compose.override.yml << EOF
+  runner-$i:
+    build: .
+    container_name: github-runner-$i
+    environment:
+      - GITHUB_TOKEN=\${GITHUB_TOKEN}
+      - GITHUB_ORG=\${GITHUB_ORG}
+      - RUNNER_NAME=${HOSTNAME}-runner-$i
+      - RUNNER_LABELS=self-hosted,Linux,X64,docker
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - runner${i}-work:/home/runner/_work
+    restart: unless-stopped
+    networks:
+      - runner-network
+
+EOF
 done
+
+# Add volumes section
+echo "volumes:" >> docker-compose.override.yml
+for i in $(seq 1 $TOTAL_RUNNERS); do
+    echo "  runner${i}-work:" >> docker-compose.override.yml
+done
+
+# Add networks section
+cat >> docker-compose.override.yml << EOF
+
+networks:
+  runner-network:
+    driver: bridge
+EOF
+
+# Start all runners
+echo "Starting runners..."
+docker compose -f docker-compose.yml -f docker-compose.override.yml up -d --build
 
 echo ""
 echo "All $TOTAL_RUNNERS runners started successfully!"
 echo "They will appear in your GitHub organization settings in 1-2 minutes."
 echo ""
+echo "Runner names:"
+for i in $(seq 1 $TOTAL_RUNNERS); do
+    echo "  - ${HOSTNAME}-runner-$i"
+done
+echo ""
 echo "Commands:"
-echo "  docker compose ps          # Check status"
-echo "  docker compose logs         # View logs"
-echo "  docker compose down         # Stop all runners"
+echo "  docker compose -f docker-compose.yml -f docker-compose.override.yml ps"
+echo "  docker compose -f docker-compose.yml -f docker-compose.override.yml logs"
+echo "  docker compose -f docker-compose.yml -f docker-compose.override.yml down"
