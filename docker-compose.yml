@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  runner:
+    build: .
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GITHUB_ORG=${GITHUB_ORG}
+      - RUNNER_NAME=${RUNNER_NAME_PREFIX:-runner}-${HOSTNAME:-docker}-${RUNNER_NUMBER:-1}
+      - RUNNER_LABELS=self-hosted,Linux,X64,docker
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+    networks:
+      - runner-network
+
+networks:
+  runner-network:
+    driver: bridge

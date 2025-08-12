@@ -42,16 +42,17 @@ RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
     apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Playwright browser dependencies  
+# Install Playwright browser dependencies for Ubuntu 24.04
+# Note: Ubuntu 24.04 uses t64 suffix for many packages due to 64-bit time_t transition
 RUN apt-get update && apt-get install -y \
     libnss3 \
     libnspr4 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
+    libatk1.0-0t64 \
+    libatk-bridge2.0-0t64 \
+    libcups2t64 \
     libdrm2 \
     libdbus-1-3 \
-    libatspi2.0-0 \
+    libatspi2.0-0t64 \
     libx11-6 \
     libxcomposite1 \
     libxdamage1 \
@@ -65,20 +66,35 @@ RUN apt-get update && apt-get install -y \
     libcairo2 \
     libasound2t64 \
     libasound2-data \
-    libgtk-3-0 \
+    libgtk-3-0t64 \
+    libgdk-pixbuf-2.0-0 \
     libgdk-pixbuf2.0-0 \
     libxshmfence1 \
     fonts-liberation \
+    fonts-freefont-ttf \
+    fonts-ipafont-gothic \
+    fonts-noto-color-emoji \
+    fonts-tlwg-loma-otf \
+    fonts-unifont \
+    fonts-wqy-zenhei \
+    xfonts-cyrillic \
+    xfonts-scalable \
     libxtst6 \
     libxss1 \
     libexpat1 \
     libxcursor1 \
     libxi6 \
+    libglib2.0-0t64 \
+    libpangocairo-1.0-0 \
+    libx11-xcb1 \
+    libxrender1 \
+    libxinerama1 \
+    xvfb \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Playwright globally as root
-RUN npm install -g playwright@latest && \
-    npx playwright install-deps chromium
+# DO NOT use install-deps as it will try to install old package names
+RUN npm install -g playwright@latest
 
 # Install Java 21 LTS
 RUN apt-get update && \
@@ -138,6 +154,8 @@ RUN RUNNER_VERSION=$(curl -s https://api.github.com/repos/actions/runner/release
     sudo ./bin/installdependencies.sh
 
 # Install Playwright browsers as runner user
+# Set environment variable to skip OS validation since Ubuntu 24.04 is not officially supported yet
+ENV PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
 RUN npm install playwright && \
     npx playwright install chromium
 

@@ -44,18 +44,18 @@ read -p "Paste your GitHub Personal Access Token: " GITHUB_TOKEN
 # Choose size
 echo ""
 echo -e "${YELLOW}Choose your droplet size:${NC}"
-echo "1) Basic - 2GB RAM, 1 CPU ($12/month) - Light builds"
-echo "2) Standard - 2GB RAM, 2 CPU ($18/month) - Most builds"  
-echo "3) Performance - 4GB RAM, 2 CPU ($24/month) - Java/Docker"
-echo "4) Heavy - 8GB RAM, 4 CPU ($48/month) - Large projects"
+echo "1) Basic - 1 CPU, 2GB RAM ($12/month) - 3 runners"
+echo "2) Standard - 2 CPU, 2GB RAM ($18/month) - 6 runners"  
+echo "3) Performance - 2 CPU, 4GB RAM ($24/month) - 6 runners"
+echo "4) Heavy - 4 CPU, 8GB RAM ($48/month) - 12 runners"
 read -p "Enter choice [1-4]: " size_choice
 
 case $size_choice in
-    1) SIZE="s-1vcpu-2gb"; DESC="2GB RAM, 1 CPU" ;;
-    2) SIZE="s-2vcpu-2gb"; DESC="2GB RAM, 2 CPU" ;;
-    3) SIZE="s-2vcpu-4gb"; DESC="4GB RAM, 2 CPU" ;;
-    4) SIZE="s-4vcpu-8gb"; DESC="8GB RAM, 4 CPU" ;;
-    *) SIZE="s-1vcpu-2gb"; DESC="2GB RAM, 1 CPU" ;;
+    1) SIZE="s-1vcpu-2gb"; DESC="1 CPU, 2GB RAM"; RUNNERS=3 ;;
+    2) SIZE="s-2vcpu-2gb"; DESC="2 CPU, 2GB RAM"; RUNNERS=6 ;;
+    3) SIZE="s-2vcpu-4gb"; DESC="2 CPU, 4GB RAM"; RUNNERS=6 ;;
+    4) SIZE="s-4vcpu-8gb"; DESC="4 CPU, 8GB RAM"; RUNNERS=12 ;;
+    *) SIZE="s-1vcpu-2gb"; DESC="1 CPU, 2GB RAM"; RUNNERS=3 ;;
 esac
 
 # Get organization name
@@ -70,21 +70,26 @@ cat > "$TEMP_FILE" << EOF
 package_update: true
 
 runcmd:
-  - curl -fsSL https://get.docker.com | sh
+  - apt-get update
+  - apt-get install -y docker.io docker-compose-v2 git
+  - systemctl start docker
+  - systemctl enable docker
   - git clone https://github.com/jahwag/digitalocean-github-runner /opt/runner
   - cd /opt/runner
-  - docker build -t runner .
   - |
-    docker run -d --name runner --restart always \
-      -e GITHUB_TOKEN=${GITHUB_TOKEN} \
-      -e GITHUB_ORG=${ORG_NAME} \
-      runner
+    cat > .env << 'ENVEOF'
+    GITHUB_TOKEN=${GITHUB_TOKEN}
+    GITHUB_ORG=${ORG_NAME}
+    ENVEOF
+  - chmod +x start-runners.sh
+  - ./start-runners.sh
 EOF
 
 # Deploy
 echo ""
 echo -e "${YELLOW}Deploying your runner...${NC}"
 echo "• Size: $DESC"
+echo "• Runners: $RUNNERS (3 per CPU core)"
 echo "• Region: Amsterdam"
 echo "• Organization: $ORG_NAME"
 echo ""
@@ -127,11 +132,12 @@ echo "Droplet Name: $DROPLET_NAME"
 echo "IP Address: $DROPLET_IP"
 echo "Monthly Cost: \$${SIZE:2:2}"
 echo ""
-echo -e "${BLUE}Your runner will appear in 2-3 minutes at:${NC}"
+echo -e "${BLUE}Your $RUNNERS runners will appear in 2-3 minutes at:${NC}"
 echo "https://github.com/organizations/${ORG_NAME}/settings/actions/runners"
 echo ""
 echo -e "${YELLOW}Useful commands:${NC}"
-echo "• Check status: doctl compute ssh $DROPLET_NAME --ssh-command 'docker logs runner'"
+echo "• Check status: doctl compute ssh $DROPLET_NAME --ssh-command 'docker compose ps'"
+echo "• View logs: doctl compute ssh $DROPLET_NAME --ssh-command 'docker compose logs'"
 echo "• SSH access: doctl compute ssh $DROPLET_NAME"
-echo "• Delete runner: doctl compute droplet delete $DROPLET_NAME"
+echo "• Delete runners: doctl compute droplet delete $DROPLET_NAME"
 echo ""
